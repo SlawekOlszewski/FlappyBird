@@ -13,6 +13,7 @@ import java.awt.Toolkit;
 import java.awt.event.KeyEvent;
 import java.awt.event.KeyListener;
 import java.awt.image.BufferStrategy;
+import java.util.Random;
 import java.util.Timer;
 import java.util.TimerTask;
 import javax.swing.ImageIcon;
@@ -32,19 +33,30 @@ public class FlappyBird extends JFrame {
     
     private final Image background;
     private final Image bird;
+    private final Image pipe;
+    private final Image pipeInverted;
     private int positionY = 225;
     private final Timer timer;
     private boolean     controls[];
     private boolean released = true;
-    
+    Random rn1 = new Random();
+    Random rn2 = new Random();
+    Random rn3 = new Random();
+    private int top;
+    private int bottom;
+    private int pipePositionX1 = 1024-120;
+    private int frameCount = 0;
+    private int speed = 10;
+    private boolean gameFail = false;
+            
     class Controls extends TimerTask{
         
         private int gravity = 1;
-        private int velocity = 0;
+        public int velocity = 0;
         
         public void run(){
             if(controls[0]){
-                positionY += -velocity*10 ;
+                positionY += -velocity*6 ;
                 velocity = 0;
                 controls[0] = false;
             }
@@ -57,6 +69,7 @@ public class FlappyBird extends JFrame {
                 gravity = 0;
                 velocity = 0;
                 /*GAMEOVER*/
+                gameFail = true;
                 int answer = JOptionPane.showConfirmDialog(null, "Game Over, do you want to play again?", "GAME OVER", JOptionPane.YES_NO_OPTION);
                 System.out.println(answer);
                 if(answer == -1 | answer == 1){
@@ -64,17 +77,26 @@ public class FlappyBird extends JFrame {
                 }
                 else
                 {
+                    gameFail = false;
                     positionY = 225;
                     dispose();
                     FlappyBird game = new FlappyBird();
                     game.repaint();
                 }
             }
-            
+            pipePositionX1 -= speed;
             positionY = (positionY < 0)?0:positionY;
+            frameCount++;
+            if(pipePositionX1 < 0) {
+                pipePositionX1 = 1050;
+                top = rn1.nextInt(573/2) + 25;
+                bottom = rn2.nextInt(573/2) + 60;
+            }
+            System.out.println(frameCount);
             repaint();
         }
     }
+    
     
     public FlappyBird(){
         super("FlappyBird");
@@ -86,9 +108,15 @@ public class FlappyBird extends JFrame {
         setResizable(false); 
         setVisible(true);
         createBufferStrategy(2);
+        //////////
+        top = rn1.nextInt(573/2);
+        bottom = rn2.nextInt(573/2);
+        /////////////
         
         background = new ImageIcon("images/background.png").getImage();
         bird = new ImageIcon("images/bird.png").getImage();
+        pipe = new ImageIcon("images/pipe.png").getImage();
+        pipeInverted = new ImageIcon("images/pipeInverted.png").getImage();
      
         controls = new boolean[2];
         
@@ -142,8 +170,12 @@ public class FlappyBird extends JFrame {
         
         g2d.drawImage(background, 0, 0, null);
         g2d.drawImage(bird, 200, positionY, null);
-        
+        g2d.drawImage(pipeInverted, pipePositionX1  , 0, 100, top, null);
+        g2d.drawImage(pipe, pipePositionX1 , 573-bottom, 100, bottom, null);
+
         g2d.dispose();
         bstrategy.show();
+        }
     }
-}
+
+ 
